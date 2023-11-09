@@ -118,7 +118,7 @@ def write_input_files(ds, temp_dir):
 
     write_list_ini(uv_files, temp_dir)
 
-def compute_FSLE(ds, variables, t0, t1, domain, resolution=0.02, final_separation=0.2, output_file='FSLE.nc', temp_dir='_tmp/'):
+def compute_FSLE(ds, variables, t0, t1, domain, resolution=0.05, stencil = 'triplet', initial_separation = 0.02, final_separation=0.6, output_file='FSLE.nc', temp_dir='_tmp/'):
     """
     Compute Finite-Size Lyapunov Exponents (FSLE) for U and V data.
 
@@ -157,14 +157,14 @@ def compute_FSLE(ds, variables, t0, t1, domain, resolution=0.02, final_separatio
 
     FSLE_cmd = f'map_of_fle {temp_dir}list.ini {output_file} \
         {t_init} --advection_time {advection_time} --resolution {resolution} \
-        --x_min {xmin} --x_max {xmax} --y_min {ymin} --y_max {ymax} \
-        --final_separation {final_separation} --time_direction backward'
+        --stencil {stencil} --x_min {xmin} --x_max {xmax} --y_min {ymin} --y_max {ymax} \
+        --initial_separation {initial_separation} --final_separation {final_separation} --time_direction backward'
         
     print(FSLE_cmd)
 
     subprocess.call(FSLE_cmd, shell=True)
     
-def compute_FSLE_3D(ds, variables, t0 , t1, domain, depths=None, resolution=0.02, final_separation=0.2, temp_dir='_tmp/'):
+def compute_FSLE_3D(ds, variables, t0 , t1, domain, depths=None, resolution=0.05, stencil = 'triplet', initial_separation = 0.02, final_separation=0.6, temp_dir='_tmp/'):
     """
     Compute Finite-Size Lyapunov Exponents (FSLE) for U and V data at multiple depth layers.
 
@@ -189,7 +189,7 @@ def compute_FSLE_3D(ds, variables, t0 , t1, domain, depths=None, resolution=0.02
 
     for depth in depths:
         output_file = f'FSLE_depth_{depth}.nc'
-        compute_FSLE(ds.interp(depth=depth, method='nearest'), variables, t0, t1, domain, resolution, final_separation, output_file, temp_dir)
+        compute_FSLE(ds.interp(depth=depth, method='nearest'), variables, t0, t1, domain, resolution, stencil, initial_separation, final_separation, output_file, temp_dir)
 
         fsle_layer = xr.open_dataset(output_file)
         fsle_list.append(fsle_layer)
