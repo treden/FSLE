@@ -155,11 +155,17 @@ def compute_FSLE(ds, variables, t0, t1, domain, resolution=0.05, stencil = 'trip
 
     t_init = ''.join(str(pd.Timestamp(ds.time.values[-1]).date()).split('-'))
 
-    FSLE_cmd = f'map_of_fle {temp_dir}list.ini {output_file} --mode {mode}\
+    FSLE_cmd = f'map_of_fle {temp_dir}list.ini {output_file}\
         {t_init} --advection_time {advection_time} --resolution {resolution} \
         --stencil {stencil} --x_min {xmin} --x_max {xmax} --y_min {ymin} --y_max {ymax} \
         --initial_separation {initial_separation} --final_separation {final_separation} --time_direction backward'
-        
+    
+    if mode == 'ftle':
+        FSLE_cmd = f'map_of_fle {temp_dir}list.ini {output_file} --mode {mode}\
+        {t_init} --advection_time {advection_time} --resolution {resolution} \
+        --stencil {stencil} --x_min {xmin} --x_max {xmax} --y_min {ymin} --y_max {ymax} \
+        --initial_separation {initial_separation} --time_direction backward'
+            
     print(FSLE_cmd)
 
     subprocess.call(FSLE_cmd, shell=True)
