@@ -118,26 +118,27 @@ def write_input_files(ds, temp_dir):
 
     write_list_ini(uv_files, temp_dir)
 
-def compute_FSLE(ds, variables, time, domain, resolution=0.02, final_separation=0.2, integration_time=7, output_file='FSLE.nc', temp_dir='_tmp/'):
+def compute_FSLE(ds, variables, t0, t1, domain, resolution=0.02, final_separation=0.2, output_file='FSLE.nc', temp_dir='_tmp/'):
     """
     Compute Finite-Size Lyapunov Exponents (FSLE) for U and V data.
 
     Parameters:
     - ds (xarray.Dataset): The dataset containing U and V data over time.
     - variables (dict): Dictionary specifying variable names for 'time', 'longitude', 'latitude', 'u', and 'v'.
-    - time (pandas.Timestamp): The reference timestamp for the analysis.
+    - t0 (str or pandas.Timestamp): The start time for the analysis.
+    - t1 (str or pandas.Timestamp): The end time for the analysis.
     - domain (list or None): Spatial domain in the format [x_min, x_max, y_min, y_max]. None for the full domain.
     - resolution (float): Spatial resolution in degrees.
     - final_separation (float): Separation threshold for FSLE calculation.
-    - integration_time (int): Integration time in days.
     - output_file (str): Output NetCDF file to store the FSLE results.
     - temp_dir (str): Temporary directory for intermediate files.
 
     Returns:
     - None
     """
-    dt = integration_time
-    t0, t1 = time - pd.Timedelta(days=int(dt / 2 + 1)), time + pd.Timedelta(days=int(dt / 2 + 1))
+    # dt = integration_time
+    # t0, t1 = time - pd.Timedelta(days=int(dt / 2 + 1)), time + pd.Timedelta(days=int(dt / 2 + 1))
+    t0, t1 = pd.Timestamp(t0), pd.Timestamp(t1)
     
     ds = create_input_dataset(ds, variables, domain=domain)
     ds = ds.sel(time=slice(t0, t1))
@@ -163,20 +164,19 @@ def compute_FSLE(ds, variables, time, domain, resolution=0.02, final_separation=
 
     subprocess.call(FSLE_cmd, shell=True)
     
-def compute_FSLE_3D(ds, variables, time, domain, depths=None, resolution=0.02, final_separation=0.2, integration_time=7, temp_dir='_tmp/'):
+def compute_FSLE_3D(ds, variables, t0 , t1, domain, depths=None, resolution=0.02, final_separation=0.2, temp_dir='_tmp/'):
     """
     Compute Finite-Size Lyapunov Exponents (FSLE) for U and V data at multiple depth layers.
 
     Parameters:
     - ds (xarray.Dataset): The dataset containing U and V data at various depth levels.
     - variables (dict): Dictionary specifying variable names for 'time', 'longitude', 'latitude', 'u', 'v', and 'depth'.
-    - time (pandas.Timestamp): The reference timestamp for the analysis.
+    - t0 (str or pandas.Timestamp): The start time for the analysis.
+    - t1 (str or pandas.Timestamp): The end time for the analysis.
     - domain (list or None): Spatial domain in the format [x_min, x_max, y_min, y_max]. None for the full domain.
     - depths (list or None): List of depth levels to compute FSLE for. If None, it uses all available depths.
     - resolution (float): Spatial resolution in degrees.
     - final_separation (float): Separation threshold for FSLE calculation.
-    - integration_time (int): Integration time in days.
-    - output_file (str): Output NetCDF file to store the 3D FSLE results.
     - temp_dir (str): Temporary directory for intermediate files.
 
     Returns:
@@ -189,7 +189,7 @@ def compute_FSLE_3D(ds, variables, time, domain, depths=None, resolution=0.02, f
 
     for depth in depths:
         output_file = f'FSLE_depth_{depth}.nc'
-        compute_FSLE(ds.interp(depth=depth, method='nearest'), variables, time, domain, resolution, final_separation, integration_time, output_file, temp_dir)
+        compute_FSLE(ds.interp(depth=depth, method='nearest'), variables, t0, t1, domain, resolution, final_separation, output_file, temp_dir)
 
         fsle_layer = xr.open_dataset(output_file)
         fsle_list.append(fsle_layer)
